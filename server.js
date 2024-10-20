@@ -1,6 +1,6 @@
 const express = require('express');
 const axios = require('axios');
-const { createCanvas, loadImage } = require('canvas');
+const sharp = require('sharp');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,20 +30,15 @@ async function getSkinURL(uuid) {
 // Función para recortar la cabeza de la skin con mejor calidad
 async function getHeadImage(skinUrl, size) {
     try {
-        const img = await loadImage(skinUrl);
+        const imageBuffer = await axios.get(skinUrl, { responseType: 'arraybuffer' });
         
-        // Canvas de alta resolución para mejor calidad
-        const canvas = createCanvas(size, size);
-        const ctx = canvas.getContext('2d');
-        
-        // Suavizado y calidad alta para la escala
-        ctx.imageSmoothingEnabled = true; 
-        ctx.imageSmoothingQuality = 'high'; 
+        // Usa sharp para recortar y redimensionar la imagen
+        const headImageBuffer = await sharp(imageBuffer.data)
+            .extract({ left: 8, top: 8, width: 8, height: 8 }) // Extraer el área de la cabeza
+            .resize(size, size) // Redimensionar al tamaño especificado
+            .toBuffer();
 
-        // Dibujar la cabeza de la skin escalada al tamaño deseado
-        ctx.drawImage(img, 8, 8, 8, 8, 0, 0, size, size); // Extrae los primeros 8x8 píxeles y los escala al tamaño dado
-
-        return canvas.toBuffer();
+        return headImageBuffer;
     } catch (error) {
         throw new Error('Error al procesar la imagen');
     }
