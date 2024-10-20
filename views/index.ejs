@@ -1,0 +1,93 @@
+<%- include('components/header', { title: 'CanvaSkins - Obtener Cabezas de Jugadores', description: 'Esta API permite obtener la cabeza de un jugador de Minecraft a partir de su nombre de usuario.' }) %>
+
+<div class="container mx-auto px-4 py-8">
+
+    <section class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+        <h2 class="text-3xl font-semibold text-green-300 mb-4 text-center">Endpoints:</h2>
+
+        <div class="mb-6">
+            <h3 class="text-2xl font-medium text-gray-200 text-center">1. Obtener la cabeza de un jugador</h3>
+            <p class="text-lg text-gray-300 text-center">
+                <strong class="text-green-400">GET /head/:username/:size?</strong>
+            </p>
+            <ul class="list-disc list-inside text-gray-300 text-center">
+                <li><strong>username</strong>: Nombre de usuario de Minecraft del que deseas obtener la cabeza.</li>
+                <li><strong>size</strong> (opcional): Tamaño de la imagen de la cabeza (en píxeles). Por defecto, es 64.</li>
+            </ul>
+        </div>
+
+        <div class="mb-6">
+            <h4 class="text-lg font-semibold text-green-300 mb-2 text-center">Ejemplo:</h4>
+            <p class="text-gray-300 text-center">
+                <code class="bg-green-700 p-2 rounded">GET /head/Steve/128</code> - Obtiene la cabeza del jugador 'Steve' con un tamaño de 128x128 píxeles.
+            </p>
+        </div>
+    </section>
+
+    <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h3 class="text-2xl font-medium text-gray-200 mb-4 text-center">2. Ver Cabeza de Jugador</h3>
+        <p class="text-lg text-gray-300 mb-4 text-center">Ingresa un nombre de usuario para ver la cabeza del jugador.</p>
+        
+        <form id="username-form" class="flex flex-col items-center mb-8 p-6 bg-gray-700 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold text-green-300 mb-4 text-center">Consulta la Cabeza de un Jugador</h3>
+            
+            <input type="text" id="username" placeholder="Nombre de usuario" class="px-4 py-3 rounded-lg mb-4 w-80 bg-gray-800 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500" required>
+            
+            <div class="relative mb-4 w-80">
+                <input type="number" id="size" placeholder="Tamaño (opcional)" class="px-4 py-3 rounded-lg bg-gray-800 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500" min="1" value="64">
+                <div class="absolute inset-y-0 right-0 flex items-center">
+                    <button type="button" class="bg-green-500 text-white px-2 py-1 rounded-l-lg focus:outline-none hover:bg-green-600" id="increase">+</button>
+                    <button type="button" class="bg-green-500 text-white px-2 py-1 rounded-r-lg focus:outline-none hover:bg-green-600" id="decrease">-</button>
+                </div>
+            </div>
+            
+            <button type="submit" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-200 ease-in-out">Mostrar Cabeza</button>
+        </form>
+
+        <div id="head-container" class="flex justify-center"></div>
+    </section>
+</div>
+
+<script>
+    const form = document.getElementById('username-form');
+    const headContainer = document.getElementById('head-container');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const size = document.getElementById('size').value || 64; // Tamaño por defecto 64
+
+        try {
+            const response = await fetch(`/head/${username}/${size}`);
+            if (!response.ok) {
+                throw new Error('Error al obtener la cabeza');
+            }
+            
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(await response.blob());
+            img.alt = `Cabeza de ${username}`;
+            img.className = "my-4 w-64 h-64"; // Tamaño de imagen ajustado
+            headContainer.innerHTML = ''; // Limpiar cabezas anteriores
+            headContainer.appendChild(img);
+        } catch (error) {
+            console.error(error);
+            headContainer.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+        }
+    });
+
+    const increaseBtn = document.getElementById('increase');
+    const decreaseBtn = document.getElementById('decrease');
+    const sizeInput = document.getElementById('size');
+
+    increaseBtn.addEventListener('click', () => {
+        sizeInput.value = parseInt(sizeInput.value) + 1;
+    });
+
+    decreaseBtn.addEventListener('click', () => {
+        if (parseInt(sizeInput.value) > 1) {
+            sizeInput.value = parseInt(sizeInput.value) - 1;
+        }
+    });
+</script>
+
+<%- include('components/footer') %>
